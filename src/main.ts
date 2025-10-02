@@ -8,7 +8,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({ origin: true, credentials: true });
-
   app.setGlobalPrefix('api');
 
   app.useGlobalPipes(
@@ -45,7 +44,7 @@ async function bootstrap() {
   });
 
   const port = Number(process.env.PORT) || 3000;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0'); // docker setting so pra ser sure
 
   const url = await app.getUrl();
   console.log(`API: ${url}/api`);

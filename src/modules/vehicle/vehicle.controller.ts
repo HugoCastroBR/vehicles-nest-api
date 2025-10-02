@@ -8,7 +8,7 @@ import {
   Param,
   UsePipes,
   ValidationPipe,
-  ParseUUIDPipe, // ou ParseIntPipe se seu id for inteiro
+  ParseUUIDPipe,
   HttpCode,
   HttpStatus,
   UseFilters,
@@ -19,7 +19,7 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { VehiclePrismaExceptionFilter } from './filters/vehicle-prisma-exception.filter';
 
 @ApiTags('vehicles')
-@UseFilters(VehiclePrismaExceptionFilter) // aplica apenas para este controller
+@UseFilters(VehiclePrismaExceptionFilter)
 @Controller('vehicles')
 export class VehicleController {
   constructor(private readonly service: VehicleService) { }

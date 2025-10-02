@@ -1,9 +1,7 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16-alpine
-    container_name: users_auth_db
+    container_name: vehicle_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -19,6 +17,19 @@ services:
       timeout: 3s
       retries: 10
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: vehicle_rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   api:
     build:
       context: .
@@ -27,12 +38,25 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     env_file:
       - .env
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      PORT: "3000"
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/vehicle_api?schema=public"
+      RMQ_URL: "amqp://guest:guest@rabbitmq:5672"
+      RMQ_QUEUE: "vehicles.events"
     ports:
       - "3000:3000"
-    # Se quiser logs mais limpos
+    volumes:
+      - .:/usr/src/app
+      - node_modules:/usr/src/app/node_modules
     restart: unless-stopped
 
 volumes:
   db_data:
+  node_modules:

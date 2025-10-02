@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+Dockerfile
+Dockerfile.prod
+.git
+.gitignore
+.env
+coverage
+# Não ignore "dist" aqui (mesmo não usando no dev), mas não precisamos copiá-lo

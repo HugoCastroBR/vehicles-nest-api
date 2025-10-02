@@ -1,98 +1,102 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Vehicle API — Quickstart (Yarn e Docker)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Guia curto para subir o projeto com Yarn (local) e com Docker (dev).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Requisitos
+- Node.js 20+
+- Yarn 1.x
+- Docker e Docker Compose
+- PostgreSQL e RabbitMQ (via Docker)
 
-## Description
+## Variáveis de ambiente
+Crie um arquivo .env (para uso local) e/ou .env.docker (para uso nos containers) na raiz:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+```env
+# Porta da API
+PORT=3000
 
-## Project setup
+# Postgres (no Docker, aponte para o serviço "db")
+DATABASE_URL=postgresql://postgres:postgres@db:5432/vehicle_api?schema=public
 
-```bash
-$ yarn install
+# RabbitMQ (no Docker, aponte para o serviço "rabbitmq")
+RMQ_URL=amqp://guest:guest@rabbitmq:5672
+RMQ_QUEUE=vehicles.events
 ```
 
-## Compile and run the project
+Observação:
+- Em execução local sem Docker para DB/RabbitMQ, ajuste DATABASE_URL e RMQ_URL (ex.: localhost).
 
+---
+
+## Rodando com Docker (dev)
+1) Build e subir os serviços:
 ```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+docker compose up --build
 ```
 
-## Run tests
+2) A API ficará disponível em:
+- Swagger: http://localhost:3000/docs
+- Rotas (com prefixo global): http://localhost:3000/api
 
+3) Banco de dados (Prisma):
+- Primeira vez (aplicar schema):
 ```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+docker compose exec api yarn prisma migrate dev --name init
+# ou, para aplicar sem criar nova migration:
+docker compose exec api yarn prisma db push
+```
+- (Opcional) Seed:
+```bash
+docker compose exec api yarn prisma db seed
 ```
 
-## Deployment
+Dicas:
+- Se aparecer “relation ... does not exist”, rode as migrations (comandos acima).
+- Se o RabbitMQ desconectar com PRECONDITION_FAILED de reply, garanta que o Client RMQ está com `noAck: true`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+---
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+## Rodando localmente com Yarn
+1) Instalar dependências e gerar Prisma Client:
 ```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+yarn install
+yarn prisma generate
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+2) Subir Postgres e RabbitMQ com Docker (opcional, se não tiver localmente):
+```bash
+docker compose up -d db rabbitmq
+```
 
-## Resources
+3) Aplicar schema do banco:
+```bash
+yarn prisma migrate dev --name init
+# ou
+yarn prisma db push
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+4) Iniciar a API (watch):
+```bash
+yarn start:dev
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+Acesse:
+- http://localhost:3000/docs
+- http://localhost:3000/api
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Testes
+```bash
+yarn test
+# ou em watch:
+yarn test:watch
+```
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Problemas comuns (rápido)
+- ERR_EMPTY_RESPONSE ao abrir “/”: acesse “/docs” ou “/api/...”; a raiz não tem handler.
+- Conexão Postgres (P1001): confira `DATABASE_URL` (no Docker, host deve ser `db`, não `localhost`).
+- RabbitMQ 406 PRECONDITION_FAILED: use `noAck: true` no Client RMQ (reply-to).
+- Prisma Client ausente: rode `yarn prisma generate`.
